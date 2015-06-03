@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Main Street Host Chat</title>
+
+	<link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet" />
+	<style>
+		body {
+			padding-top: 50px;
+		}
+		.starter-template {
+			padding: 40px 15px;
+			text-align: center;
+		}
+	</style>
+	<title>Chat Room - Main Street Host</title>
+	<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+</head>
+
+<body class="full-bg font-white">
+	<nav class="navbar navbar-inverse navbar-fixed-top">
+		<div class="container">
+			<div class="navbar-header">
+				<span class="navbar-brand">Chat Rooms</span>
+			</div>
+		</div>
+	</nav>
+	<div class="starter-template">
+		<div class="container">
+			<div class="container">
+				<input type="text" id="userName" placeholder="Enter User Name"></input>
+				<button type="button" id="enterButton" onclick="enterUserName()">Enter</button>
+				<button type="button" onclick="logOut()">Log Out</button>
+			</div>
+			<div clas="container" style="margin-top: 10px;">
+				<input type="text" id="chatRoomName" placeholder="Enter Chat Room Name"></input>
+				<button type="button" id="chatRoomEnter" onclick="saveChatRoom()">Enter</button>
+                <button type="button" id="chatRoomList" onclick="getChatRooms()">Get all chat rooms</button>
+			</div>
+            <div class="container" style="margin-top: 10px;">
+                <textarea rows="5" cols="50" id="chatMessage" maxlength="250" placeholder="Enter chat message here"></textarea>
+                <button type="button" id="chatMessageButton" onclick="postToChatRoom()">Post Message</button>
+            </div>
+		</div>
+		<div class="container" style="margin-top: 10px;">
+			<div class="displayArea" style="margin-top: 10px;">				
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	jQuery.noConflict();
+    var currentRoom;    
+	
+	jQuery(document).ready(function(){
+		jQuery('#chatRoomName').hide();
+		jQuery('#chatRoomEnter').hide();
+        jQuery('#chatMessage').hide();
+        jQuery('#chatMessageButton').hide();
+	});
+	
+	var enterUserName = function(){
+		var userName = jQuery('#userName').val();
+		hideUserName();
+		displayUserName(userName);
+		jQuery('#chatRoomName').show();
+		jQuery('#chatRoomEnter').show();	
+	}
+	
+	var hideUserName = function(){
+		jQuery('#userName').hide();
+		jQuery('#enterButton').hide();
+	}
+	
+	var logOut = function(){
+		jQuery('#userName').val("");
+		jQuery('.displayArea').empty();
+		jQuery('#userName').show();
+		jQuery('#enterButton').show();
+		jQuery('#chatRoomName').hide();
+		jQuery('#chatRoomEnter').hide();
+	}
+	
+	var displayUserName = function(userName){
+		jQuery('.displayArea').append(userName + " is currently logged in");
+	}
+    
+    var saveChatRoom = function(){
+        var chatRoomName = jQuery('#chatRoomName').val();
+        jQuery.ajax({
+            method: "POST",
+            url: 'http://mainstreetchat-kylepace.rhcloud.com/chatroom',
+            data: { name: chatRoomName }
+        })
+        .done(function(feedBack){
+            jQuery('.displayArea').append("<br /> You are in chatroom " + feedBack.name);
+        });
+        jQuery('#chatMessage').show();
+        jQuery('#chatMessageButton').show();
+    }
+    
+    var getChatRooms = function(){
+        jQuery.getJSON('http://mainstreetchat-kylepace.rhcloud.com/chatroom', function(data){
+            var items = [];
+            jQuery.each(data, function(key, val){
+                items.push("<li id='" + key + "'>" + val.name + "</li>");
+        });
+            jQuery("<ul/>", {
+                "class": "chatRoomList",
+                html: items.join("")
+            }).appendTo("body");
+        });
+    }
+    
+    var postToChatRoom = function(){
+        var userName = jQuery('#userName').val();
+        var chatMessage = jQuery('#chatMessage').val();
+        if(chatMessage){
+            jQuery.ajax({
+                type: "POST",
+                url: "http://mainstreetchat-kylepace.rhcloud.com/chatroom/{id}/post",
+                data: { username: userName, text: chatMessage }
+            })
+                .done(function(msg){
+                    jQuery("#body").append("<p>" + msg + "</p>");
+                    console.log("data has been posted " + msg);
+                });
+        }
+        else { alert("You must enter a message"); }
+    }
+    
+	
+		
+	</script>
+</body>
+</html>
